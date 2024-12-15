@@ -1,6 +1,9 @@
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, request
 
 app = Flask(__name__)
+app.config.from_mapping(
+    SECRET_KEY= 'dev'
+)
 
 @app.add_template_filter
 def today(date):
@@ -47,3 +50,31 @@ from markupsafe import escape
 @app.route('/code/<path:code>')
 def code(code):
     return f'<code>{escape(code)}</code>'
+
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Length 
+
+class RegisterForm(FlaskForm):
+    username = StringField("Nombre de usuario: ", validators=[DataRequired(), Length(min=4, max=25)])
+    password = PasswordField("Password: ", validators=[DataRequired(), Length(min=6, max=40)])
+    submit = SubmitField("Registrar: ")
+
+@app.route('/auth/register', methods = ['GET', 'POST'])
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        return f'User {username}, contrasena {password}!'
+    # if request.method == 'POST':
+    #     username = request.form['username']
+    #     password = request.form['password']
+    #     if len(username) >= 4 and len(username) <=25 and len(password) >= 6 and len(password) <=40:
+    #         # register user
+    #         return f'User {username}, contrasena {password}!'
+    #     else:
+    #         error = """Nombre de usuario debe contener entre 4 y 25 caracteres y
+    #         la contrasena debe tener entre 6 y 40 caracteres"""
+    #         return render_template('auth/register.html', form=form, error=error)
+    return render_template('auth/register.html', form = form)
